@@ -5,21 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Playtoy Park - Menu Principal</title>
 
-
 <link rel="manifest" href="manifest.json">
 
 <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
   }
-
+</script>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="logo.png">
     <link rel="icon" href="logo.png">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; text-align: center; background-color: #f0f2f5; }
         .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
@@ -113,47 +114,82 @@
     function ir(m, l) { window.location.href = `checklist.html?maq=${encodeURIComponent(m)}&loja=${encodeURIComponent(l)}`; }
 
     function limparTudo() {
-        if(confirm("Apagar tudo?")) { localStorage.removeItem("historicoChecklist"); location.reload(); }
+        if(confirm("Apagar tudo? Isso removerá todas as fotos e registros salvos. Continuar?")) { 
+            localStorage.removeItem("historicoChecklist"); 
+            location.reload(); 
+        }
     }
 
     async function gerarPdf(soParadas) {
-        const { jsPDF } = window.jspdf;
+        // Correção de inicialização para garantir funcionamento mobile
+        const { jsPDF } = window.jspdf || window;
+        if (!jsPDF) return alert("Erro: Biblioteca de PDF não carregada. Verifique sua internet.");
+
         const doc = new jsPDF();
         const loja = document.getElementById("seletorLoja").value;
         const data = document.getElementById("dataRel").value;
-        if (!data) return alert("Selecione uma data.");
+        
+        if (!data) return alert("Selecione uma data para o relatório.");
+        
         const hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
         let registros = hist.filter(r => r.loja === loja && r.data === data);
+        
         if (soParadas) registros = registros.filter(r => r.itens[0].resposta === "Não");
-        if (registros.length === 0) return alert("Nada encontrado.");
+        if (registros.length === 0) return alert("Nenhum registro encontrado para esta data/unidade.");
 
-        let y = 15;
-        doc.setFontSize(16);
-        doc.text(`${soParadas ? 'MÁQUINAS PARADAS' : 'GERAL'} - ${loja} (${data})`, 10, y);
-        y += 15;
+        try {
+            let y = 15;
+            doc.setFontSize(16);
+            doc.text(`${soParadas ? 'MÁQUINAS PARADAS' : 'RELATÓRIO GERAL'}`, 10, y);
+            y += 10;
+            doc.setFontSize(12);
+            doc.text(`Unidade: ${loja} | Data: ${data}`, 10, y);
+            y += 15;
 
-        for (let r of registros) {
-            if (y > 240) { doc.addPage(); y = 20; }
-            doc.setFont(undefined, 'bold');
-            doc.text(`MÁQUINA: ${r.equipamento}`, 10, y);
-            y += 7;
-            if (!soParadas) {
-                doc.setFont(undefined, 'normal');
-                r.itens.forEach(item => { doc.text(`- ${item.pergunta}: ${item.resposta}`, 15, y); y += 6; });
-                if(r.comentarioFoto) { doc.text(`Obs: ${r.comentarioFoto}`, 15, y); y += 7; }
-                if (r.fotos && r.fotos.length > 0) {
-                    let xF = 15;
-                    for (let f of r.fotos) {
-                        if (y > 230) { doc.addPage(); y = 20; }
-                        doc.addImage(f, 'JPEG', xF, y, 40, 40);
-                        xF += 45; if (xF > 160) { xF = 15; y += 45; }
+            for (let r of registros) {
+                if (y > 250) { doc.addPage(); y = 20; }
+                
+                doc.setFont(undefined, 'bold');
+                doc.text(`MÁQUINA: ${r.equipamento}`, 10, y);
+                y += 7;
+                
+                if (!soParadas) {
+                    doc.setFont(undefined, 'normal');
+                    r.itens.forEach(item => { 
+                        if (y > 270) { doc.addPage(); y = 20; }
+                        doc.text(`- ${item.pergunta}: ${item.resposta}`, 15, y); 
+                        y += 6; 
+                    });
+
+                    if(r.comentarioFoto) { 
+                        doc.text(`Obs: ${r.comentarioFoto}`, 15, y); 
+                        y += 7; 
                     }
-                    y += (xF === 15) ? 5 : 50;
+
+                    if (r.fotos && r.fotos.length > 0) {
+                        let xF = 15;
+                        for (let f of r.fotos) {
+                            if (y > 230) { doc.addPage(); y = 20; }
+                            try {
+                                doc.addImage(f, 'JPEG', xF, y, 40, 40);
+                                xF += 45; 
+                                if (xF > 160) { xF = 15; y += 45; }
+                            } catch (err) {
+                                console.error("Erro ao adicionar imagem ao PDF", err);
+                            }
+                        }
+                        y += (xF === 15) ? 5 : 50;
+                    }
+                    y += 10;
+                } else {
+                    y += 5;
                 }
-                y += 5;
-            } else { y += 5; }
+            }
+            doc.save(soParadas ? `Paradas_${loja}_${data}.pdf` : `Geral_${loja}_${data}.pdf`);
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao gerar o PDF. Pode haver muitas fotos ou dados corrompidos. Tente limpar o histórico.");
         }
-        doc.save(soParadas ? `Maquinas_Paradas_${loja}.pdf` : `Relatorio_Geral_${loja}.pdf`);
     }
 </script>
 </body>
