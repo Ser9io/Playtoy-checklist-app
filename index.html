@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playtoy Park - Menu Principal</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="icon" href="logo.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; text-align: center; background-color: #f0f2f5; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .header-logo img { max-width: 220px; margin-bottom: 15px; }
+        
+        /* ANIMAÇÃO PAC-MAN RESTAURADA */
+        .arcade-bar { width: 100%; height: 55px; background: #000; position: relative; margin-bottom: 25px; border-radius: 12px; overflow: hidden; border: 3px solid #1a73e8; display: flex; align-items: center; }
+        .game-group { position: absolute; display: flex; align-items: center; width: 220px; left: -250px; animation: percurso 10s linear infinite; }
+        .pacman { background: yellow; border-radius: 50%; width: 22px; height: 22px; position: relative; animation: evolucaoPacman 10s step-end infinite; }
+        .pacman::after { content: ""; border: 10px solid transparent; border-right: 10px solid #000; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: mouthAnim 0.3s ease infinite; }
+        .ghost { width: 22px; height: 22px; margin: 0 5px; border-radius: 11px 11px 0 0; position: relative; }
+        .red { background: red; } .pink { background: #ffb8ff; } .cyan { background: #00ffff; }
+        
+        @keyframes percurso { 0% { left: -250px; } 48% { left: 105%; } 50% { left: 105%; } 98% { left: -250px; } 100% { left: -250px; } }
+        @keyframes evolucaoPacman { 0%, 49% { transform: scaleX(1); } 50%, 100% { transform: scaleX(-1); } }
+        @keyframes mouthAnim { 0%, 100% { border-right-width: 12px; } 50% { border-right-width: 0px; } }
+        
+        .card-loja { background: #e8f0fe; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 2px solid #1a73e8; }
+        select { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #1a73e8; font-size: 16px; }
+        .grupo-titulo { background: #1a73e8; color: white; padding: 5px 15px; border-radius: 20px; display: inline-block; font-size: 14px; margin-top: 15px; font-weight: bold; }
+        .btn-maquina { padding: 12px; margin: 6px 0; cursor: pointer; border-radius: 8px; border: none; background: #6c757d; color: white; font-weight: bold; width: 100%; transition: 0.3s; text-align: left; padding-left: 20px; }
+        .btn-concluido { background: #28a745 !important; border-left: 10px solid #155724; }
+        .pdf-box { margin-top: 30px; padding: 20px; border: 2px dashed #1a73e8; border-radius: 15px; background: #f8fbff; }
+        .btn-pdf { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 8px; color: white; }
+    </style>
+</head>
+<body onload="carregarEstado()">
+
+<div class="container">
+    <div class="header-logo"><img src="logo.png" alt="Playtoy Park" onerror="this.src='https://via.placeholder.com/220x80?text=PLAYTOY+PARK'"></div>
+    
+    <div class="arcade-bar">
+        <div class="game-group">
+            <div class="pacman"></div><div class="ghost red"></div><div class="ghost pink"></div><div class="ghost cyan"></div>
+        </div>
+    </div>
+
+    <div class="card-loja">
+        <label><strong>Selecione a Unidade:</strong></label><br><br>
+        <select id="seletorLoja" onchange="alternarLoja()">
+            <option value="">-- Escolher Loja --</option>
+            <option value="Loja Shopping">Loja Shopping</option>
+            <option value="Loja Centro">Loja Centro</option>
+        </select>
+    </div>
+
+    <div id="areaGrupos" style="display:none; text-align: left;">
+        <div id="listaBotoes"></div>
+        
+        <div class="pdf-box">
+            <h3>📄 Relatórios</h3>
+            <input type="date" id="dataRel" style="width:92%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc;">
+            <button class="btn-pdf" style="background:#28a745;" onclick="gerarPdf(false)">Gerar PDF Geral (Com Fotos)</button>
+            <button class="btn-pdf" style="background:#dc3545;" onclick="gerarPdf(true)">PDF Máquinas Paradas (Apenas Nomes)</button>
+            <button class="btn-pdf" style="background:#6c757d;" onclick="limparTudo()">Limpar Todo Histórico</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const estruturaGrupos = {
+        "GRUPO A: Simuladores": ["Jurassic Park", "Street Fighter Classic", "Simulador Moto", "Transformers"],
+        "GRUPO B: Redenção/Esporte": ["Air Hockey Pro", "Dino Hockey", "Mortal Kombat", "Basquete Street"]
+    };
+
+    function carregarEstado() {
+        const lojaSalva = localStorage.getItem("lojaAtiva");
+        if (lojaSalva) { document.getElementById("seletorLoja").value = lojaSalva; alternarLoja(); }
+    }
+
+    function alternarLoja() {
+        const loja = document.getElementById("seletorLoja").value;
+        const area = document.getElementById("areaGrupos");
+        const lista = document.getElementById("listaBotoes");
+        if (!loja) { area.style.display = "none"; return; }
+        localStorage.setItem("lojaAtiva", loja);
+        area.style.display = "block";
+        const hoje = new Date().toISOString().split("T")[0];
+        const hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
+        let htmlFinal = "";
+        for (const [nomeGrupo, maquinas] of Object.entries(estruturaGrupos)) {
+            htmlFinal += `<div class="grupo-titulo">${nomeGrupo}</div>`;
+            maquinas.forEach(m => {
+                const concluido = hist.some(r => r.loja === loja && r.equipamento === m.toUpperCase() && r.data === hoje);
+                htmlFinal += `<button class="btn-maquina ${concluido ? 'btn-concluido' : ''}" onclick="ir('${m}', '${loja}')">${concluido ? '✅ ' : ''}${m}</button>`;
+            });
+        }
+        lista.innerHTML = htmlFinal;
+    }
+
+    function ir(m, l) { window.location.href = `checklist.html?maq=${encodeURIComponent(m)}&loja=${encodeURIComponent(l)}`; }
+
+    function limparTudo() {
+        if(confirm("Apagar tudo?")) { localStorage.removeItem("historicoChecklist"); location.reload(); }
+    }
+
+    async function gerarPdf(soParadas) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const loja = document.getElementById("seletorLoja").value;
+        const data = document.getElementById("dataRel").value;
+        if (!data) return alert("Selecione uma data.");
+        const hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
+        let registros = hist.filter(r => r.loja === loja && r.data === data);
+        if (soParadas) registros = registros.filter(r => r.itens[0].resposta === "Não");
+        if (registros.length === 0) return alert("Nada encontrado.");
+
+        let y = 15;
+        doc.setFontSize(16);
+        doc.text(`${soParadas ? 'MÁQUINAS PARADAS' : 'GERAL'} - ${loja} (${data})`, 10, y);
+        y += 15;
+
+        for (let r of registros) {
+            if (y > 240) { doc.addPage(); y = 20; }
+            doc.setFont(undefined, 'bold');
+            doc.text(`MÁQUINA: ${r.equipamento}`, 10, y);
+            y += 7;
+            if (!soParadas) {
+                doc.setFont(undefined, 'normal');
+                r.itens.forEach(item => { doc.text(`- ${item.pergunta}: ${item.resposta}`, 15, y); y += 6; });
+                if(r.comentarioFoto) { doc.text(`Obs: ${r.comentarioFoto}`, 15, y); y += 7; }
+                if (r.fotos && r.fotos.length > 0) {
+                    let xF = 15;
+                    for (let f of r.fotos) {
+                        if (y > 230) { doc.addPage(); y = 20; }
+                        doc.addImage(f, 'JPEG', xF, y, 40, 40);
+                        xF += 45; if (xF > 160) { xF = 15; y += 45; }
+                    }
+                    y += (xF === 15) ? 5 : 50;
+                }
+                y += 5;
+            } else { y += 5; }
+        }
+        doc.save(soParadas ? `Maquinas_Paradas_${loja}.pdf` : `Relatorio_Geral_${loja}.pdf`);
+    }
+</script>
+</body>
+</html>

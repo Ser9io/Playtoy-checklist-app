@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="icon" href="logo.png">
+
+    <title>Checklist Otimizado - Playtoy Park</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 15px; background: #f4f7f6; text-align: center; }
+        .header-box { background: white; padding: 15px; border-bottom: 4px solid #1a73e8; margin-bottom: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        .card { background: white; border: 1px solid #ddd; padding: 18px; margin-bottom: 15px; border-radius: 12px; text-align: left; }
+        .thumb-container { position: relative; display: inline-block; margin: 5px; }
+        .thumb { width: 90px; height: 90px; object-fit: cover; border-radius: 8px; border: 2px solid #1a73e8; }
+        .btn-del { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; border: none; font-size: 12px; cursor: pointer; }
+        textarea { width: 100%; height: 70px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; margin-top: 10px; }
+        .btn-save { background: #28a745; color: white; padding: 18px; width: 100%; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 20px; }
+        .loading-msg { color: #1a73e8; font-weight: bold; display: none; margin-bottom: 10px; }
+    </style>
+</head>
+<body onload="carregarDadosExistentes()">
+
+<div class="header-box">
+    <h2 id="txtMaq">---</h2>
+    <p>Unidade: <span id="txtLoja">---</span></p>
+</div>
+
+<div class="container">
+    <div class="card">
+        <strong>Técnico Responsável:</strong>
+        <input type="text" id="tecnico" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; box-sizing: border-box;">
+    </div>
+
+    <div id="listaPerguntas">
+        <div class="card" style="background:#fff3cd;">
+            <strong>1. A máquina está funcionando?</strong><br><br>
+            <input type="radio" name="p0" value="Sim" checked> Sim &nbsp;&nbsp;
+            <input type="radio" name="p0" value="Não"> Não
+        </div>
+    </div>
+
+    <div class="card">
+        <strong>📸 Registro Fotográfico (Fotos Comprimidas)</strong><br><br>
+        <p style="font-size: 11px; color: #666;">As fotos são reduzidas automaticamente para caber mais no sistema.</p>
+        <input type="file" id="inputFoto" accept="image/*" capture="camera" multiple onchange="processarFotos(this)">
+        <div id="loading" class="loading-msg">Comprimindo imagens... aguarde.</div>
+        <div id="galeria" style="margin-top: 10px;"></div> 
+        <textarea id="comentarioFoto" placeholder="Detalhes técnicos ou observações..."></textarea>
+    </div>
+
+    <button class="btn-save" onclick="salvar()">💾 SALVAR CHECKLIST</button>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const maquina = (params.get("maq") || "").toUpperCase();
+    const loja = params.get("loja") || "";
+    const dataHoje = new Date().toISOString().split("T")[0];
+
+    document.getElementById("txtMaq").innerText = maquina;
+    document.getElementById("txtLoja").innerText = loja;
+
+    const checklists = {
+        "JURASSIC PARK": ["Pistolas OK?", "Sensor Tiro OK?", "Banco OK?"],
+        "AIR HOCKEY PRO": ["Ar soprando?", "Placar OK?", "Som OK?"],
+        "STREET FIGHTER CLASSIC": ["Alavanca OK?", "Botões OK?", "Imagem OK?"],
+        "SIMULADOR MOTO": ["Guidão OK?", "Freio OK?", "Sensores OK?"],
+        "TRANSFORMERS": ["Mira OK?", "Som OK?", "Luzes OK?"],
+        "DINO HOCKEY": ["Batedores OK?", "Fluxo de ar OK?", "Gols OK?"],
+        "MORTAL KOMBAT": ["Joystick OK?", "Botão Bloqueio?", "Som OK?"],
+        "BASQUETE STREET": ["Aro firme?", "Rede OK?", "Sensor Ponto OK?"]
+    };
+
+    const perguntasExtras = checklists[maquina] || ["Limpeza feita?", "Som/Luzes OK?"];
+    const container = document.getElementById("listaPerguntas");
+
+    perguntasExtras.forEach((p, i) => {
+        container.innerHTML += `<div class="card"><strong>${i+2}. ${p}</strong><br><br>
+            <input type="radio" name="p${i+1}" value="Sim" checked> Sim &nbsp;&nbsp;
+            <input type="radio" name="p${i+1}" value="Não"> Não</div>`;
+    });
+
+    let fotosBase64 = [];
+
+    function carregarDadosExistentes() {
+        const hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
+        const registro = hist.find(r => r.loja === loja && r.equipamento === maquina && r.data === dataHoje);
+        if (registro) {
+            document.getElementById("tecnico").value = registro.responsavel;
+            document.getElementById("comentarioFoto").value = registro.comentarioFoto;
+            registro.itens.forEach((item, i) => {
+                const radios = document.getElementsByName(`p${i}`);
+                for (let r of radios) { if (r.value === item.resposta) r.checked = true; }
+            });
+            if (registro.fotos) {
+                fotosBase64 = registro.fotos;
+                renderizarGaleria();
+            }
+        }
+    }
+
+    // --- FUNÇÃO DE COMPRESSÃO DE IMAGEM ---
+    async function processarFotos(input) {
+        const loading = document.getElementById("loading");
+        loading.style.display = "block";
+        
+        const files = Array.from(input.files);
+        for (let file of files) {
+            const compressed = await compressImage(file);
+            fotosBase64.push(compressed);
+        }
+        
+        renderizarGaleria();
+        loading.style.display = "none";
+        input.value = ""; // Limpa o input para permitir novas fotos
+    }
+
+    function compressImage(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800; // Reduz a largura para 800px (ótimo para mobile)
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // Comprime a qualidade para 0.7 (70%)
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    resolve(dataUrl);
+                };
+            };
+        });
+    }
+
+    function renderizarGaleria() {
+        const galeria = document.getElementById("galeria");
+        galeria.innerHTML = "";
+        fotosBase64.forEach((src, index) => {
+            const div = document.createElement("div");
+            div.className = "thumb-container";
+            div.innerHTML = `
+                <img src="${src}" class="thumb">
+                <button class="btn-del" onclick="removerFoto(${index})">X</button>
+            `;
+            galeria.appendChild(div);
+        });
+    }
+
+    function removerFoto(index) {
+        fotosBase64.splice(index, 1);
+        renderizarGaleria();
+    }
+
+    function salvar() {
+        const tec = document.getElementById("tecnico").value;
+        if(!tec) return alert("Preencha o nome do técnico.");
+
+        const todasP = ["Status Geral", ...perguntasExtras];
+        const itens = todasP.map((p, i) => {
+            const rads = document.getElementsByName(`p${i}`);
+            let res = "Não";
+            rads.forEach(r => { if(r.checked) res = r.value; });
+            return { pergunta: p, resposta: res };
+        });
+
+        const novoRegistro = {
+            data: dataHoje, loja, equipamento: maquina, responsavel: tec,
+            comentarioFoto: document.getElementById("comentarioFoto").value,
+            fotos: fotosBase64,
+            itens
+        };
+
+        let hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
+        const index = hist.findIndex(r => r.loja === loja && r.equipamento === maquina && r.data === dataHoje);
+        if (index !== -1) hist.splice(index, 1);
+        
+        hist.push(novoRegistro);
+
+        try {
+            localStorage.setItem("historicoChecklist", JSON.stringify(hist));
+            alert("Checklist atualizado com sucesso!");
+            window.location.href = "index.html";
+        } catch (e) {
+            alert("O limite de memória do celular foi atingido. Por favor, remova algumas fotos ou limpe o histórico no menu principal.");
+        }
+    }
+</script>
+</body>
+</html>
