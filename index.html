@@ -116,7 +116,8 @@
         if(confirm("Apagar tudo?")) { localStorage.removeItem("historicoChecklist"); location.reload(); }
     }
 
-    async function gerarPdf(soParadas) {
+
+async function gerarPdf(soParadas) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         const loja = document.getElementById("seletorLoja").value;
@@ -153,8 +154,41 @@
                 y += 5;
             } else { y += 5; }
         }
-        doc.save(soParadas ? `Maquinas_Paradas_${loja}.pdf` : `Relatorio_Geral_${loja}.pdf`);
+
+        // MUDANÇA AQUI: Método de salvamento compatível com App/PWA
+        const nomeArquivo = soParadas ? `Maquinas_Paradas_${loja}.pdf` : `Relatorio_Geral_${loja}.pdf`;
+        
+        try {
+            const blob = doc.output('blob');
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = nomeArquivo;
+            
+            // Força a abertura em nova aba se for PWA no iOS/Android
+            link.target = '_blank'; 
+            
+            document.body.appendChild(link);
+            link.click();
+            
+            // Limpeza após um pequeno delay para garantir o download
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 100);
+            
+        } catch (error) {
+            console.error("Erro ao gerar PDF:", error);
+            // Backup caso o método acima falhe em sistemas muito restritos
+            doc.save(nomeArquivo);
+        }
     }
+
+
+
+
+
+    
 </script>
 </body>
 </html>
