@@ -1,20 +1,21 @@
 {
-  "short_name": "MeuApp",
-  "name": "Nome Completo do Meu Aplicativo",
+  "name": "Playtoy Park Checklist",
+  "short_name": "Playtoy Park",
+  "description": "Sistema de Checklist Técnico Playtoy Park",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f0f2f5",
+  "theme_color": "#1a73e8",
   "icons": [
     {
-      "src": "icon-192.png",
-      "type": "image/png",
-      "sizes": "192x192"
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
     },
     {
-      "src": "icon-512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
-  ],
-  "start_url": "index.html",
-  "background_color": "#ffffff",
-  "display": "standalone",
-  "theme_color": "#000000"
+  ]
 }
