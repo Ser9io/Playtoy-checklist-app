@@ -40,7 +40,7 @@
     <div id="listaPerguntas">
         <div class="card" style="background:#fff3cd;">
             <strong>1. A máquina está funcionando?</strong><br><br>
-            <input type="radio" name="p0" value="Sim" checked> Sim &nbsp;&nbsp;
+            <input type="radio" name="p0" value="Sim"> Sim &nbsp;&nbsp;          
             <input type="radio" name="p0" value="Não"> Não
         </div>
     </div>
@@ -61,7 +61,8 @@
     const params = new URLSearchParams(window.location.search);
     const maquina = (params.get("maq") || "").toUpperCase();
     const loja = params.get("loja") || "";
-    const dataHoje = new Date().toISOString().split("T")[0];
+ // Cria a data no fuso horário de Brasília (ou local do dispositivo) formatada como AAAA-MM-DD
+    const dataHoje = new Date().toLocaleDateString('sv-SE');   
 
     document.getElementById("txtMaq").innerText = maquina;
     document.getElementById("txtLoja").innerText = loja;
@@ -80,30 +81,66 @@
     const perguntasExtras = checklists[maquina] || ["Limpeza feita?", "Som/Luzes OK?"];
     const container = document.getElementById("listaPerguntas");
 
-    perguntasExtras.forEach((p, i) => {
-        container.innerHTML += `<div class="card"><strong>${i+2}. ${p}</strong><br><br>
-            <input type="radio" name="p${i+1}" value="Sim" checked> Sim &nbsp;&nbsp;
-            <input type="radio" name="p${i+1}" value="Não"> Não</div>`;
-    });
+perguntasExtras.forEach((p, i) => {
+    container.innerHTML += `<div class="card"><strong>${i+2}. ${p}</strong><br><br>
+        <input type="radio" name="p${i+1}" value="Sim"> Sim &nbsp;&nbsp;
+        <input type="radio" name="p${i+1}" value="Não"> Não</div>`;
+});
+
 
     let fotosBase64 = [];
 
-    function carregarDadosExistentes() {
-        const hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
-        const registro = hist.find(r => r.loja === loja && r.equipamento === maquina && r.data === dataHoje);
-        if (registro) {
-            document.getElementById("tecnico").value = registro.responsavel;
-            document.getElementById("comentarioFoto").value = registro.comentarioFoto;
-            registro.itens.forEach((item, i) => {
-                const radios = document.getElementsByName(`p${i}`);
-                for (let r of radios) { if (r.value === item.resposta) r.checked = true; }
-            });
-            if (registro.fotos) {
-                fotosBase64 = registro.fotos;
-                renderizarGaleria();
-            }
-        }
+
+function limparRegistrosAntigos() {
+    const hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
+    if (hist.length === 0) return;
+
+    const trintaDiasAtras = new Date();
+    trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
+
+    // Filtra para manter apenas registros com menos de 30 dias
+    const histFiltrado = hist.filter(reg => {
+        const dataReg = new Date(reg.data);
+        return dataReg >= trintaDiasAtras;
+    });
+
+    // Atualiza o armazenamento se algo foi removido
+    if (histFiltrado.length !== hist.length) {
+        localStorage.setItem("historicoChecklist", JSON.stringify(histFiltrado));
+        console.log("Limpeza de 30 dias concluída no checklist.");
     }
+}
+
+function carregarDadosExistentes() {
+    // Chama a limpeza automática primeiro
+    limparRegistrosAntigos(); 
+
+    const hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
+    
+    // Tenta encontrar o registro específico desta máquina hoje
+    const registroMaq = hist.find(r => r.loja === loja && r.equipamento === maquina && r.data === dataHoje);
+    
+    // Busca o último técnico que salvou qualquer checklist hoje para auto-preencher o nome
+    const ultimoRegistroDoDia = hist.filter(r => r.data === dataHoje).pop();
+
+    if (registroMaq) {
+        document.getElementById("tecnico").value = registroMaq.responsavel;
+        document.getElementById("comentarioFoto").value = registroMaq.comentarioFoto;
+        registroMaq.itens.forEach((item, i) => {
+            const radios = document.getElementsByName(`p${i}`);
+            for (let r of radios) { if (r.value === item.resposta) r.checked = true; }
+        });
+        if (registroMaq.fotos) {
+            fotosBase64 = registroMaq.fotos;
+            renderizarGaleria();
+        }
+    } else if (ultimoRegistroDoDia) {
+        // Se a máquina não tem checklist, mas alguém já trabalhou hoje, preenche o nome do técnico
+        document.getElementById("tecnico").value = ultimoRegistroDoDia.responsavel;
+    }
+}
+
+
 
     // --- FUNÇÃO DE COMPRESSÃO DE IMAGEM ---
     async function processarFotos(input) {
@@ -165,39 +202,53 @@
         renderizarGaleria();
     }
 
-    function salvar() {
-        const tec = document.getElementById("tecnico").value;
-        if(!tec) return alert("Preencha o nome do técnico.");
 
-        const todasP = ["Status Geral", ...perguntasExtras];
-        const itens = todasP.map((p, i) => {
-            const rads = document.getElementsByName(`p${i}`);
-            let res = "Não";
-            rads.forEach(r => { if(r.checked) res = r.value; });
-            return { pergunta: p, resposta: res };
-        });
+function salvar() {
+    const tec = document.getElementById("tecnico").value;
+    if(!tec) return alert("Preencha o nome do técnico.");
 
-        const novoRegistro = {
-            data: dataHoje, loja, equipamento: maquina, responsavel: tec,
-            comentarioFoto: document.getElementById("comentarioFoto").value,
-            fotos: fotosBase64,
-            itens
-        };
+    const todasP = ["Status Geral", ...perguntasExtras];
+    const itens = [];
 
-        let hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
-        const index = hist.findIndex(r => r.loja === loja && r.equipamento === maquina && r.data === dataHoje);
-        if (index !== -1) hist.splice(index, 1);
-        
-        hist.push(novoRegistro);
+    // VALIDAÇÃO: Verifica se todas as perguntas foram respondidas
+    for (let i = 0; i < todasP.length; i++) {
+        const rads = document.getElementsByName(`p${i}`);
+        let selecionado = null;
+        rads.forEach(r => { if(r.checked) selecionado = r.value; });
 
-        try {
-            localStorage.setItem("historicoChecklist", JSON.stringify(hist));
-            alert("Checklist atualizado com sucesso!");
-            window.location.href = "index.html";
-        } catch (e) {
-            alert("O limite de memória do celular foi atingido. Por favor, remova algumas fotos ou limpe o histórico no menu principal.");
+        if (selecionado === null) {
+            return alert(`Por favor, responda a pergunta: ${todasP[i]}`);
         }
+        itens.push({ pergunta: todasP[i], resposta: selecionado });
     }
+
+    // CRIAÇÃO DO REGISTO
+    const novoRegistro = {
+        data: dataHoje, 
+        loja: loja, 
+        equipamento: maquina, 
+        responsavel: tec,
+        comentarioFoto: document.getElementById("comentarioFoto").value,
+        fotos: fotosBase64,
+        itens: itens
+    };
+
+    let hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
+    
+    // Remove duplicados do mesmo dia/máquina antes de salvar o novo
+    const index = hist.findIndex(r => r.loja === loja && r.equipamento === maquina && r.data === dataHoje);
+    if (index !== -1) hist.splice(index, 1);
+    
+    hist.push(novoRegistro);
+
+    try {
+        localStorage.setItem("historicoChecklist", JSON.stringify(hist));
+        alert("Checklist atualizado com sucesso!");
+        window.location.href = "index.html";
+    } catch (e) {
+        alert("Erro: O limite de memória foi atingido. Remova fotos ou limpe o histórico.");
+    }
+}
 </script>
 </body>
 </html>

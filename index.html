@@ -62,8 +62,9 @@
         <label><strong>Selecione a Unidade:</strong></label><br><br>
         <select id="seletorLoja" onchange="alternarLoja()">
             <option value="">-- Escolher Loja --</option>
-            <option value="Loja Shopping">Loja Shopping</option>
-            <option value="Loja Centro">Loja Centro</option>
+            <option value="Loja Carioca">Shopping Carioca</option>
+            <option value="Loja Guadalupe">Shopping Guadalupe</option>
+            <option value="Loja Partage">Shopping Partage</option>
         </select>
     </div>
 
@@ -81,44 +82,144 @@
 </div>
 
 <script>
-    const estruturaGrupos = {
-        "GRUPO A: Simuladores": ["Jurassic Park", "Street Fighter Classic", "Simulador Moto", "Transformers"],
-        "GRUPO B: Redenção/Esporte": ["Air Hockey Pro", "Dino Hockey", "Mortal Kombat", "Basquete Street"]
-    };
 
-    function carregarEstado() {
-        const lojaSalva = localStorage.getItem("lojaAtiva");
-        if (lojaSalva) { document.getElementById("seletorLoja").value = lojaSalva; alternarLoja(); }
+const senhasLojas = {
+    "Loja Carioca": "1122",
+    "Loja Guadalupe": "3344",
+    "Loja Partage": "5566"
+};
+
+
+function limparRegistrosAntigos() {
+    const hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
+    if (hist.length === 0) return;
+
+    const hojeLocal = new Date();
+    const trintaDiasAtras = new Date();
+    trintaDiasAtras.setDate(hojeLocal.getDate() - 30);
+
+    const histFiltrado = hist.filter(reg => {
+        const dataReg = new Date(reg.data + "T00:00:00"); // Garante leitura local da data salva
+        return dataReg >= trintaDiasAtras;
+    });
+
+    if (histFiltrado.length !== hist.length) {
+        localStorage.setItem("historicoChecklist", JSON.stringify(histFiltrado));
+    }
+}
+
+
+
+const estruturaPorLoja = {
+    "Loja Carioca": {
+        "GRUPO A: Simuladores": ["Jurassic Park", "Rilix", "Street Fighter Classic", "Transformers"],
+        "GRUPO B: Redenção/Esporte": ["Air Hockey Pro", "Basquete Street"]
+    },
+    "Loja Guadalupe": {
+        "GRUPO A: Simuladores": ["Simulador Moto", "Transformers"],
+        "GRUPO B: Redenção/Esporte": ["Dino Hockey", "Mortal Kombat", "Air Hockey Pro"]
+    },
+    "Loja Partage": {
+        "GRUPO A: Simuladores": ["Jurassic Park", "Street Fighter Classic"],
+        "GRUPO B: Redenção/Esporte": ["Basquete Street", "Mortal Kombat"]
+    }
+};
+
+function carregarEstado() {
+    limparRegistrosAntigos();
+    
+    // Define a data atual no fuso horário local (formato AAAA-MM-DD)
+    const hojeLocal = new Date().toLocaleDateString('sv-SE');
+    document.getElementById("dataRel").value = hojeLocal;
+
+    const lojaSalva = localStorage.getItem("lojaAtiva");
+    if (lojaSalva) { 
+        document.getElementById("seletorLoja").value = lojaSalva; 
+        renderizarBotoes(lojaSalva); 
+    }
+}
+
+
+function renderizarBotoes(loja) {
+    const area = document.getElementById("areaGrupos");
+    const lista = document.getElementById("listaBotoes");
+    
+    area.style.display = "block";
+    
+    // CORREÇÃO DE FUSO: Pega a data local em vez de UTC
+    const hoje = new Date().toLocaleDateString('sv-SE'); 
+    
+    const hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
+    const gruposDaLoja = estruturaPorLoja[loja] || {};
+    
+    let htmlFinal = "";
+    for (const [nomeGrupo, maquinas] of Object.entries(gruposDaLoja)) {
+        htmlFinal += `<div class="grupo-titulo">${nomeGrupo}</div>`;
+        maquinas.forEach(m => {
+            // A comparação agora utiliza a data local correta
+            const concluido = hist.some(r => r.loja === loja && r.equipamento === m.toUpperCase() && r.data === hoje);
+            htmlFinal += `
+                <button class="btn-maquina ${concluido ? 'btn-concluido' : ''}" onclick="ir('${m}', '${loja}')">
+                    ${concluido ? '✅ ' : ''}${m}
+                </button>`;
+        });
+    }
+    lista.innerHTML = htmlFinal;
+}
+    
+
+function alternarLoja() {
+    const seletor = document.getElementById("seletorLoja");
+    const loja = seletor.value;
+
+    if (!loja) { 
+        document.getElementById("areaGrupos").style.display = "none"; 
+        return; 
     }
 
-    function alternarLoja() {
-        const loja = document.getElementById("seletorLoja").value;
-        const area = document.getElementById("areaGrupos");
-        const lista = document.getElementById("listaBotoes");
-        if (!loja) { area.style.display = "none"; return; }
+    // Verifica se a loja já foi acessada nesta sessão
+    const lojaAutorizada = sessionStorage.getItem("autorizado_" + loja);
+
+    if (lojaAutorizada === "true") {
         localStorage.setItem("lojaAtiva", loja);
-        area.style.display = "block";
-        const hoje = new Date().toISOString().split("T")[0];
-        const hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
-        let htmlFinal = "";
-        for (const [nomeGrupo, maquinas] of Object.entries(estruturaGrupos)) {
-            htmlFinal += `<div class="grupo-titulo">${nomeGrupo}</div>`;
-            maquinas.forEach(m => {
-                const concluido = hist.some(r => r.loja === loja && r.equipamento === m.toUpperCase() && r.data === hoje);
-                htmlFinal += `<button class="btn-maquina ${concluido ? 'btn-concluido' : ''}" onclick="ir('${m}', '${loja}')">${concluido ? '✅ ' : ''}${m}</button>`;
-            });
+        renderizarBotoes(loja);
+    } else {
+        const senhaDigitada = prompt(`Digite a senha para aceder à unidade: ${loja}`); //
+
+        if (senhaDigitada === senhasLojas[loja]) { //
+            sessionStorage.setItem("autorizado_" + loja, "true"); // Marca como autorizado
+            localStorage.setItem("lojaAtiva", loja);
+            renderizarBotoes(loja);
+        } else {
+            alert("Senha incorreta! O acesso foi negado."); //
+            seletor.value = ""; 
+            document.getElementById("areaGrupos").style.display = "none";
         }
-        lista.innerHTML = htmlFinal;
     }
+}
+
 
     function ir(m, l) { window.location.href = `checklist.html?maq=${encodeURIComponent(m)}&loja=${encodeURIComponent(l)}`; }
 
-    function limparTudo() {
-        if(confirm("Apagar tudo? Isso removerá todas as fotos e registros salvos. Continuar?")) { 
+function limparTudo() {
+    // 1. Define a senha de segurança
+    const SENHA_MESTRA = "9999"; // Altere para a senha que desejar
+
+    // 2. Solicita a senha ao utilizador
+    const senhaDigitada = prompt("Digite a senha de administrador para APAGAR TODO O HISTÓRICO:");
+
+    if (senhaDigitada === SENHA_MESTRA) {
+        // 3. Se a senha estiver correta, pede a confirmação final
+        if(confirm("ATENÇÃO: Isto apagará permanentemente todas as fotos e registos de todas as lojas. Confirmar?")) { 
             localStorage.removeItem("historicoChecklist"); 
+            alert("Todo o histórico foi removido.");
             location.reload(); 
         }
+    } else if (senhaDigitada !== null) {
+        // Se errou a senha (e não apenas cancelou o prompt)
+        alert("Senha incorreta! Operação cancelada.");
     }
+}
 
     async function gerarPdf(soParadas) {
         // Correção de inicialização para garantir funcionamento mobile
