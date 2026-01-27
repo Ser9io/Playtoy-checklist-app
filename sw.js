@@ -1,8 +1,15 @@
 self.addEventListener('install', (e) => {
-  console.log('Service Worker instalado!');
+  e.waitUntil(
+    caches.open('playtoy-v1').then((cache) => {
+      return cache.addAll(['index.html', 'checklist.html', 'logo.png']);
+    })
+  );
 });
 
 self.addEventListener('fetch', (e) => {
-  // Isso permite que o app funcione até com internet lenta
-  e.respondWith(fetch(e.request));
+  e.respondWith(
+    caches.match(e.request).then((response) => {
+      return response || fetch(e.request);
+    })
+  );
 });
