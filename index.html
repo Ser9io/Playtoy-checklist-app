@@ -8,11 +8,12 @@
     <link rel="manifest" href="manifest.json">
 
 <script>
+    
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('SW registrado!', reg))
-        .catch(err => console.log('Erro no SW:', err));
+      navigator.serviceWorker.register('./sw.js') // Ponto adicionado aqui
+        .then(reg => console.log('SW ativo!', reg.scope))
+        .catch(err => console.log('Falha no SW:', err));
     });
   }
 </script>
