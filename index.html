@@ -8,12 +8,12 @@
     <link rel="manifest" href="manifest.json">
 
 <script>
-    
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js') // Ponto adicionado aqui
-        .then(reg => console.log('SW ativo!', reg.scope))
-        .catch(err => console.log('Falha no SW:', err));
+      // O ponto antes da barra é fundamental para o GitHub Pages
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('PWA ativo no escopo:', reg.scope))
+        .catch(err => console.log('Erro ao registrar SW:', err));
     });
   }
 </script>
