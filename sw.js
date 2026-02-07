@@ -1,7 +1,13 @@
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open('playtoy-v1').then((cache) => {
-      return cache.addAll(['index.html', 'checklist.html', 'logo.png']);
+      return cache.addAll([
+        'index.html', 
+        'checklist.html', 
+        'icon-192.png', 
+        'icon-512.png', 
+        'logo_abertura.png'
+      ]);
     })
   );
 });

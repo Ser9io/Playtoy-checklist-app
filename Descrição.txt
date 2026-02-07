@@ -1,0 +1,32 @@
+ANÁLISE DE FUNCIONALIDADES - SISTEMA PLAYTOY PARK
+
+1. INTERFACE E EXPERIÊNCIA DO UTILIZADOR (UX/UI)
+• PWA (Progressive Web App): O sistema está configurado como um aplicativo instalável com suporte a Service Worker para funcionamento offline.
+• SplashScreen: Apresenta uma tela de abertura com o logótipo da empresa antes de carregar o menu principal.
+• Tutorial Integrado: Exibe um guia de primeiro acesso para orientar o técnico sobre as cores e funções do sistema.
+• Animação Temática: Inclui uma barra visual animada com o tema Pac-Man, alinhada à identidade visual de uma casa de jogos.
+• Design Responsivo: Interface otimizada para dispositivos móveis com botões de grandes dimensões e navegação facilitada.
+
+2. GESTÃO DE LOJAS E EQUIPAMENTOS
+• Organização Hierárquica: Os equipamentos são divididos por Loja (Carioca, Guadalupe, Partage) e por Grupos (Fliperama, Simuladores, Gruas, etc.).
+• Controlo de Acesso: Cada loja possui uma senha específica de quatro dígitos para proteger a visualização dos dados.
+• Contador de Progresso: O menu principal mostra em tempo real quantos checklists foram feitos em cada grupo (ex: 5/12).
+• Indicadores de Status: Máquinas concluídas ficam marcadas com a cor verde e um ícone de "check" (✅).
+
+3. SISTEMA DE CHECKLIST E COLETA DE DADOS
+• Perguntas Dinâmicas: Combina 10 perguntas padrão de manutenção com perguntas específicas para cada tipo de máquina (ex: calibração de armas ou fluxo de ar).
+• Identificação de Técnico: O sistema identifica quem está a realizar o serviço e preenche automaticamente o nome do técnico nos próximos registos do dia.
+• Gestão de Imagens: Permite capturar várias fotos diretamente da câmara ou galeria.
+• Compressão de Fotos: Redimensiona e comprime as imagens automaticamente para 800px e 70% de qualidade para poupar memória no dispositivo.
+• Observações Técnicas: Campo dedicado para anotações detalhadas sobre o estado do equipamento.
+
+4. RELATÓRIOS E ARMAZENAMENTO
+• Geração de PDF: Permite criar relatórios diários completos ou apenas de máquinas que apresentaram defeito ("Máquinas Paradas").
+• Formatação Profissional: O PDF destaca o nome da máquina em azul, o técnico responsável em negrito e as falhas ("Não") em cor vermelha.
+• Registo Fotográfico no PDF: Inclui as fotos capturadas e as observações técnicas organizadas por equipamento.
+• Armazenamento Local: Utiliza o localStorage do navegador para manter os dados salvos sem necessidade de uma base de dados externa constante.
+• Limpeza Automática: O sistema remove registos com mais de 30 dias para otimizar o espaço de armazenamento.
+
+5. FERRAMENTAS ADMINISTRATIVAS
+• Senha Master: Existe uma função de limpeza total do histórico protegida por uma senha administrativa (9999).
+• Seletor de Datas: Possibilidade de consultar e gerar relatórios de dias anteriores através de um filtro de data.
