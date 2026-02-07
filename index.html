@@ -5,28 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Playtoy Park - Menu Principal</title>
 
-<link rel="manifest" href="manifest.json">
-
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-  }
-</script>
-
+    <link rel="manifest" href="manifest.json">
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+      }
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="logo.png">
-    <link rel="icon" href="logo.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; text-align: center; background-color: #f0f2f5; }
+        /* Estilos Visuais */
+        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; text-align: center; background-color: #f0f2f5; margin: 0; }
         .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .header-logo img { max-width: 220px; margin-bottom: 15px; }
         
-        /* ANIMAÇÃO PAC-MAN RESTAURADA */
+        /* TELA DE ABERTURA (SPLASH SCREEN) */
+        #splashScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #000; z-index: 10000; 
+            display: flex; align-items: center; justify-content: center; 
+            transition: opacity 1s ease; /* Efeito de esmaecer */
+        }
+
+        /* TELA DE EXPLICAÇÃO (TUTORIAL) */
+        #tutorialOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); z-index: 9999; 
+            display: flex; align-items: center; justify-content: center; 
+            color: white; padding: 20px; box-sizing: border-box;
+        }
+
+        /* ANIMAÇÃO ARCADE (PAC-MAN) */
         .arcade-bar { width: 100%; height: 55px; background: #000; position: relative; margin-bottom: 25px; border-radius: 12px; overflow: hidden; border: 3px solid #1a73e8; display: flex; align-items: center; }
         .game-group { position: absolute; display: flex; align-items: center; width: 220px; left: -250px; animation: percurso 10s linear infinite; }
         .pacman { background: yellow; border-radius: 50%; width: 22px; height: 22px; position: relative; animation: evolucaoPacman 10s step-end infinite; }
@@ -38,100 +51,141 @@
         @keyframes evolucaoPacman { 0%, 49% { transform: scaleX(1); } 50%, 100% { transform: scaleX(-1); } }
         @keyframes mouthAnim { 0%, 100% { border-right-width: 12px; } 50% { border-right-width: 0px; } }
         
+        /* MENU E BOTÕES */
         .card-loja { background: #e8f0fe; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 2px solid #1a73e8; }
         select { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #1a73e8; font-size: 16px; }
-        .grupo-titulo { background: #1a73e8; color: white; padding: 5px 15px; border-radius: 20px; display: inline-block; font-size: 14px; margin-top: 15px; font-weight: bold; }
-        .btn-maquina { padding: 12px; margin: 6px 0; cursor: pointer; border-radius: 8px; border: none; background: #6c757d; color: white; font-weight: bold; width: 100%; transition: 0.3s; text-align: left; padding-left: 20px; }
-        .btn-concluido { background: #28a745 !important; border-left: 10px solid #155724; }
+        .grupo-titulo { background: #1a73e8; color: white; padding: 14px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 15px; margin-top: 10px; font-weight: bold; cursor: pointer; border: none; width: 100%; }
+        .maquinas-container { display: none; padding: 5px 10px 15px 15px; border-left: 5px solid #1a73e8; margin-bottom: 5px; background: #f8f9fa; border-radius: 0 0 10px 10px; }
+        .btn-maquina { padding: 12px; margin: 8px 0; cursor: pointer; border-radius: 8px; border: none; background: #6c757d; color: white; font-weight: bold; width: 100%; text-align: left; display: block; }
+        .btn-concluido { background: #28a745 !important; border-left: 10px solid #155724 !important; }
+        
         .pdf-box { margin-top: 30px; padding: 20px; border: 2px dashed #1a73e8; border-radius: 15px; background: #f8fbff; }
         .btn-pdf { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 8px; color: white; }
     </style>
 </head>
 <body onload="carregarEstado()">
 
-<div class="container">
-    <div class="header-logo"><img src="logo.png" alt="Playtoy Park" onerror="this.src='https://via.placeholder.com/220x80?text=PLAYTOY+PARK'"></div>
-    
-    <div class="arcade-bar">
-        <div class="game-group">
-            <div class="pacman"></div><div class="ghost red"></div><div class="ghost pink"></div><div class="ghost cyan"></div>
+    <div id="splashScreen">
+        <img src="logo_abertura.png" style="max-width: 80%; max-height: 80%; border-radius: 20px;">
+    </div>
+
+    <div id="tutorialOverlay">
+        <div style="max-width: 400px; text-align: center;">
+            <h2 style="color: #1a73e8; margin-bottom: 20px;">🎮 Bem-vindo ao checklost das lojas Playtoy Park</h2>
+            <div style="text-align: left; line-height: 1.8; font-size: 16px; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px;">
+                • <b>Logar:</b> Escolha a loja e use a senha.<br>
+                • <b>Checklist:</b> Clique no nome da máquina.<br>
+                • <b>Cor Verde:</b> Indica Checklist das máquinas já feita hoje.<br>
+                • <b>Relatório:</b> Gere o PDF no botão verde abaixo.<br>
+                • <b>Observações:</b> Os PDF podem ser das máquinas que já tenham sido feitas os seus checklist ou da lista das máquinas que estejam com defeito.
+            </div>
+            <button onclick="fecharTutorial()" style="background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 25px; width: 100%;">ENTENDI, VAMOS LÁ!</button>
         </div>
     </div>
 
-    <div class="card-loja">
-        <label><strong>Selecione a Unidade:</strong></label><br><br>
-        <select id="seletorLoja" onchange="alternarLoja()">
-            <option value="">-- Escolher Loja --</option>
-            <option value="Loja Carioca">Shopping Carioca</option>
-            <option value="Loja Guadalupe">Shopping Guadalupe</option>
-            <option value="Loja Partage">Shopping Partage</option>
-        </select>
-    </div>
-
-    <div id="areaGrupos" style="display:none; text-align: left;">
-        <div id="listaBotoes"></div>
+    <div class="container">
+        <div class="header-logo"><img src="logo.png" alt="Playtoy Park"></div>
         
-        <div class="pdf-box">
-            <h3>📄 Relatórios</h3>
-            <input type="date" id="dataRel" style="width:92%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc;">
-            <button class="btn-pdf" style="background:#28a745;" onclick="gerarPdf(false)">Gerar PDF Geral (Com Fotos)</button>
-            <button class="btn-pdf" style="background:#dc3545;" onclick="gerarPdf(true)">PDF Máquinas Paradas (Apenas Nomes)</button>
-            <button class="btn-pdf" style="background:#6c757d;" onclick="limparTudo()">Limpar Todo Histórico</button>
+        <div class="arcade-bar">
+            <div class="game-group">
+                <div class="pacman"></div><div class="ghost red"></div><div class="ghost pink"></div><div class="ghost cyan"></div>
+            </div>
+        </div>
+
+        <div class="card-loja">
+            <label><strong>Unidade de Trabalho:</strong></label><br><br>
+            <select id="seletorLoja" onchange="alternarLoja()">
+                <option value="">-- Selecione a Loja --</option>
+                <option value="Loja Carioca">Shopping Carioca</option>
+                <option value="Loja Guadalupe">Shopping Guadalupe</option>
+                <option value="Loja Partage">Shopping Partage</option>
+            </select>
+        </div>
+
+        <div id="areaGrupos" style="display:none; text-align: left;">
+            <div id="listaBotoes"></div>
+            
+            <div class="pdf-box">
+                <h3>📄 Gerar Relatórios</h3>
+                <input type="date" id="dataRel" style="width:92%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc;">
+                <button class="btn-pdf" style="background:#28a745;" onclick="gerarPdf(false)">PDF Completo</button>
+                <button class="btn-pdf" style="background:#dc3545;" onclick="gerarPdf(true)">PDF Máquinas Paradas</button>
+                <button class="btn-pdf" style="background:#6c757d;" onclick="limparTudo()">Limpar Histórico Local</button>
+            </div>
         </div>
     </div>
-</div>
 
 <script>
-
-const senhasLojas = {
-    "Loja Carioca": "1122",
-    "Loja Guadalupe": "3344",
-    "Loja Partage": "5566"
-};
-
-
-function limparRegistrosAntigos() {
-    const hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
-    if (hist.length === 0) return;
-
-    const hojeLocal = new Date();
-    const trintaDiasAtras = new Date();
-    trintaDiasAtras.setDate(hojeLocal.getDate() - 30);
-
-    const histFiltrado = hist.filter(reg => {
-        const dataReg = new Date(reg.data + "T00:00:00"); // Garante leitura local da data salva
-        return dataReg >= trintaDiasAtras;
-    });
-
-    if (histFiltrado.length !== hist.length) {
-        localStorage.setItem("historicoChecklist", JSON.stringify(histFiltrado));
-    }
-}
-
-
+/** 1. CONFIGURAÇÃO DE DADOS **/
+const senhasLojas = { "Loja Carioca": "1111", "Loja Guadalupe": "2222", "Loja Partage": "3333" };
 
 const estruturaPorLoja = {
     "Loja Carioca": {
-        "GRUPO A: Simuladores": ["Jurassic Park", "Rilix", "Street Fighter Classic", "Transformers"],
-        "GRUPO B: Redenção/Esporte": ["Air Hockey Pro", "Basquete Street"]
+        "GRUPO A: Fliperama": ["Multijogos Pandora"],
+        "GRUPO B: Cabinadas": ["Jurassic Park", "Transformers"],
+        "GRUPO C: Air Games": ["Air Hockey Pac-man A", "Air Hockey Pac-man B", "Air Hockey Pac-man C"],
+        "GRUPO D: Kid Riders": ["Kid Rider Vs Drago", "Kid Rider Nemo", "Kid Rider Trem Azul", "Kid Rider Avião Apache"],
+        "GRUPO E: Gruas": ["Grua Dupla Neo Carnival", "Grua Simples Neo Carnival A", "Grua Simples Neo Carnival B", "Grua Max Claw", "Super Bicho Feliz", "Grua Top Machine"],
+        "GRUPO F: Simuladores": ["Super Bikes 2 A", "Super Bikes 2 B", "Super Speed A", "Super Speed B", "Dead Head A", "Dead Head B", "Rilix"],
+        "GRUPO G: Redemptions": ["Castle Attack", "Sonic Dash", "Sonho de Mel", "Duck Splash", "Astro Invasion", "Pirate Hook", "Super Wings", "MIB", "Ace Man", "Galaxy Travel", "Zumbi Land Battle", "Girafeplay", "Drago", "Rainbow", "Cyclone", "Pac Man Hammer", "Fright Night", "Super Soldier", "Happy Soccer", "Crazy Frog", "Fun In The Inks", "Dinosaur World", "Dinosaurs Park", "Duo Drive", "Street Basketball A", "Street Basketball B", "Bowling Champ"]
     },
     "Loja Guadalupe": {
-        "GRUPO A: Simuladores": ["Simulador Moto", "Transformers"],
-        "GRUPO B: Redenção/Esporte": ["Dino Hockey", "Mortal Kombat", "Air Hockey Pro"]
+        "GRUPO A: Fliperama": ["Multijogos Pandora", "The King 97"],
+        "GRUPO B: Cabinadas": ["Deadstorn Pirates", "Aliens"],
+        "GRUPO C: Air Games": ["Air Game Presas", "Air Game Malware A", "Air Game Malware B", "Air Game Malware C"],
+        "GRUPO D: Kid Riders": ["Kid Rider Race Space", "Kid Rider TD", "Kid Rider Jeep Azul", "Kid Rider Carro Vermelho", "Kid Rider Carro Amarelo"],
+        "GRUPO E: Gruas": ["Grua Dupla Neo Carnival 267 A e B", "Grua Simples Neo Carnival 268 A e B"],
+        "GRUPO F: Simuladores": ["Daytona USA A (Galpão)", "Daytona USA B (Galpão)", "Daytona USA A (Esportivo)", "Daytona USA B (Esportivo)", "Cruisis World 50", "Cruisis USA A", "Cruisis USA B", "Midnight Run", "Wave Runner", "Wave Shark", "Off Road challenge", "Manx TT A", "Manx TT B", "Drift A", "Drift B", "Need For Speed Carbon A", "Need For Speed Carbon B", "Seninha", "São Francisco Rush", "Super bikes 2", "Nicktoons Nitro A", "Nicktoons Nitro B", "Wack Race A", "Wack Race B", "Sonic All Star Race", "Out Run 2"],
+        "GRUPO G: Redemptions": ["Sonho de Mel", "Galaxy Travel", "Drago", "Fright Night", "Street Basketball A", "Street Basketball B", "Ghost Bowling", "Ice Ball", "Castelo do Monstro", "Zombie Outbreak", "Hammer 2", "Wacky Gator", "Hoop It Up", "Seeking Treasute", "Hipo Jungle", "Corrida Maluca", "Diverkids", "Ocean Panic", "Street Basketball Vermelha", "Ataque dos Tubarões", "Feed Fido", "Target Zero", "Fishing Fun", "Mouse Attack"],
+        "GRUPO H: Totó": ["Playgol"],
+        "GRUPO I: Coletivos": ["Auto Pista Bate-bate", "Peixinho"],
+        "GRUPO J: Galeria": ["Saloon", "Patrulha Estelar"]
     },
     "Loja Partage": {
-        "GRUPO A: Simuladores": ["Jurassic Park", "Street Fighter Classic"],
-        "GRUPO B: Redenção/Esporte": ["Basquete Street", "Mortal Kombat"]
+        "GRUPO A: Fliperama": ["Multijogos Pandora", "The King 2002"],
+        "GRUPO B: Cabinadas": ["Jurassic Park", "Transformers", "The House of the Dead 4"],
+        "GRUPO C: Air Games": ["Air Hockey Pac-man A", "Air Hockey Pac-man B", "Air Game Free Style", "Air Game Presas"],
+        "GRUPO D: Kid Riders": ["Kid Rider Train", "Kid Rider Jet Skee Amarelo", "Kid Rider Barco Pirata", "Kid Rider Carro Galo", "Kid Rider Carrão Azul", "Kid Rider Carro Amarelo"],
+        "GRUPO E: Gruas": ["Grua Simples Neo Carnival 181", "Grua Simples Neo Carnival 183", "Grua Simples Neo Carnival 381", "Grua Simples Neo Carnival 384", "Super Bicho Feliz", "Grua Top Modern Game"],
+        "GRUPO F: Simuladores": ["Aliens Extermination", "Guitar Hero", "Pump Fiesta 2010", "Super Bikes 2 A", "Super Bikes 2 B", "Dead Head A", "Dead Head B", "Rilix", "Daytona USA A", "Daytona USA B", "Daytona USA A (Esportivo)", "Daytona USA B (Esportivo)", "Sega Rally A", "Sega Rally B", "Cruisis USA", "Sonic All Star Race", "ATV Track"],
+        "GRUPO G: Redemptions": ["Sonho de Mel", "Ace Man", "Drago", "Cyclone", "Pac Man Hammer", "Happy Soccer", "Street Basketball A", "Street Basketball B", "Bowling Champ", "Chuva de Bolinha", "Fire Heros", "Surfin Ducks", "Corrida Maluca", "Rescue One!", "Patati Patatá", "Saltin Ball", "Hipo Jungle", "Bionic Basketball", "Street Basketball Vermelha", "Kung Fu Panda", "Wild West", "Atlântida", "NBA Championships"],
+        "GRUPO H: Totó": ["Futeboys"],
+        "GRUPO I: Coletivos": ["Auto Pista Bate-bate"],
+        "GRUPO J: Galeria": ["Toy Town"]		
     }
 };
 
-function carregarEstado() {
-    limparRegistrosAntigos();
-    
-    // Define a data atual no fuso horário local (formato AAAA-MM-DD)
-    const hojeLocal = new Date().toLocaleDateString('sv-SE');
-    document.getElementById("dataRel").value = hojeLocal;
+/** 2. LÓGICA DE ABERTURA E TUTORIAL **/
 
+function fecharTutorial() {
+    document.getElementById("tutorialOverlay").style.display = "none";
+    sessionStorage.setItem("tutorialLido", "sim");
+}
+
+function carregarEstado() {
+    const splash = document.getElementById("splashScreen");
+    
+    // VERIFICAÇÃO: Se já viu o splash nesta sessão, remove ele imediatamente
+    if (sessionStorage.getItem("splashVisto") === "sim") {
+        splash.style.display = "none";
+    } else {
+        // Se é a primeira vez abrindo o app agora:
+        setTimeout(() => {
+            splash.style.opacity = "0";
+            setTimeout(() => {
+                splash.style.display = "none";
+                sessionStorage.setItem("splashVisto", "sim"); // Marca como visto
+            }, 1000);
+        }, 3000);
+    }
+
+    // Controle do Tutorial (Já existente no seu código)
+    if (sessionStorage.getItem("tutorialLido") === "sim") {
+        document.getElementById("tutorialOverlay").style.display = "none";
+    }
+
+    // Configurações iniciais de data e loja
+    document.getElementById("dataRel").value = new Date().toLocaleDateString('sv-SE');
     const lojaSalva = localStorage.getItem("lojaAtiva");
     if (lojaSalva) { 
         document.getElementById("seletorLoja").value = lojaSalva; 
@@ -139,159 +193,202 @@ function carregarEstado() {
     }
 }
 
+/** 3. INTERFACE E MENU **/
 
 function renderizarBotoes(loja) {
-    const area = document.getElementById("areaGrupos");
     const lista = document.getElementById("listaBotoes");
-    
-    area.style.display = "block";
-    
-    // CORREÇÃO DE FUSO: Pega a data local em vez de UTC
+    document.getElementById("areaGrupos").style.display = "block";
     const hoje = new Date().toLocaleDateString('sv-SE'); 
-    
     const hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
-    const gruposDaLoja = estruturaPorLoja[loja] || {};
+    const grupos = estruturaPorLoja[loja] || {};
     
-    let htmlFinal = "";
-    for (const [nomeGrupo, maquinas] of Object.entries(gruposDaLoja)) {
-        htmlFinal += `<div class="grupo-titulo">${nomeGrupo}</div>`;
+    let html = "";
+    let i = 0;
+
+    for (const [nomeGrupo, maquinas] of Object.entries(grupos)) {
+        i++;
+        
+        // --- LÓGICA DO CONTADOR ---
+        let concluidas = 0;
+        const total = maquinas.length;
+        
+        // Gerar o HTML das máquinas primeiro para contar
+        let maquinasHtml = "";
         maquinas.forEach(m => {
-            // A comparação agora utiliza a data local correta
-            const concluido = hist.some(r => r.loja === loja && r.equipamento === m.toUpperCase() && r.data === hoje);
-            htmlFinal += `
-                <button class="btn-maquina ${concluido ? 'btn-concluido' : ''}" onclick="ir('${m}', '${loja}')">
-                    ${concluido ? '✅ ' : ''}${m}
-                </button>`;
+            const feito = hist.some(r => r.loja === loja && r.equipamento.toUpperCase() === m.toUpperCase() && r.data === hoje);
+            if (feito) concluidas++;
+            
+            maquinasHtml += `<button class="btn-maquina ${feito ? 'btn-concluido' : ''}" onclick="ir('${m}', '${loja}')">
+                ${feito ? '✅ ' : ''}${m}
+            </button>`;
         });
+
+        // Define a cor do contador: se concluiu tudo, fica verde claro ou destaque
+        const corContador = (concluidas === total) ? '#28a745' : '#ffffff';
+
+        // Cabeçalho do Grupo com o Contador
+        html += `
+            <button class="grupo-titulo" onclick="toggleGrupo('g-${i}')">
+                <span>📂 ${nomeGrupo}</span>
+                <span style="background: ${corContador}; color: #1a73e8; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-left: 10px;">
+                    ${concluidas}/${total}
+                </span>
+                <span id="seta-g-${i}" style="margin-left: auto;">▼</span>
+            </button>`;
+        
+        html += `<div id="g-${i}" class="maquinas-container">${maquinasHtml}</div>`;
     }
-    lista.innerHTML = htmlFinal;
+    lista.innerHTML = html;
 }
-    
+
+function toggleGrupo(id) {
+    const el = document.getElementById(id);
+    const seta = document.getElementById("seta-" + id);
+    const aberto = el.style.display === "block";
+    el.style.display = aberto ? "none" : "block";
+    seta.innerText = aberto ? "▼" : "▲";
+}
 
 function alternarLoja() {
-    const seletor = document.getElementById("seletorLoja");
-    const loja = seletor.value;
+    const sel = document.getElementById("seletorLoja");
+    const loja = sel.value;
+    
+    // Se o usuário clicar no "Selecione a Loja" (valor vazio), não faz nada
+    if (!loja) return;
+    
+    const senhaDigitada = prompt(`Senha para ${loja}:`);
 
-    if (!loja) { 
-        document.getElementById("areaGrupos").style.display = "none"; 
-        return; 
-    }
-
-    // Verifica se a loja já foi acessada nesta sessão
-    const lojaAutorizada = sessionStorage.getItem("autorizado_" + loja);
-
-    if (lojaAutorizada === "true") {
+    // Verifica se a senha está correta
+    if (senhaDigitada === senhasLojas[loja]) {
         localStorage.setItem("lojaAtiva", loja);
         renderizarBotoes(loja);
-    } else {
-        const senhaDigitada = prompt(`Digite a senha para aceder à unidade: ${loja}`); //
-
-        if (senhaDigitada === senhasLojas[loja]) { //
-            sessionStorage.setItem("autorizado_" + loja, "true"); // Marca como autorizado
-            localStorage.setItem("lojaAtiva", loja);
-            renderizarBotoes(loja);
-        } else {
-            alert("Senha incorreta! O acesso foi negado."); //
-            seletor.value = ""; 
-            document.getElementById("areaGrupos").style.display = "none";
+    } else { 
+        // Se a senha estiver errada OU se o usuário clicar em "Cancelar"
+        if (senhaDigitada !== null) {
+            alert("Senha Incorreta!"); 
         }
+        
+        // RESET: Volta o select para o estado inicial
+        sel.value = ""; 
+        
+        // Opcional: Se quiser esconder a área de grupos caso a senha falhe
+        document.getElementById("areaGrupos").style.display = "none";
+        localStorage.removeItem("lojaAtiva");
     }
 }
 
-
-    function ir(m, l) { window.location.href = `checklist.html?maq=${encodeURIComponent(m)}&loja=${encodeURIComponent(l)}`; }
+function ir(m, l) { 
+    window.location.href = `checklist.html?maq=${encodeURIComponent(m)}&loja=${encodeURIComponent(l)}`; 
+}
 
 function limparTudo() {
-    // 1. Define a senha de segurança
-    const SENHA_MESTRA = "9999"; // Altere para a senha que desejar
-
-    // 2. Solicita a senha ao utilizador
-    const senhaDigitada = prompt("Digite a senha de administrador para APAGAR TODO O HISTÓRICO:");
-
-    if (senhaDigitada === SENHA_MESTRA) {
-        // 3. Se a senha estiver correta, pede a confirmação final
-        if(confirm("ATENÇÃO: Isto apagará permanentemente todas as fotos e registos de todas as lojas. Confirmar?")) { 
+    if (prompt("Senha Master:") === "9999") { 
+        if(confirm("Apagar todo histórico?")) { 
             localStorage.removeItem("historicoChecklist"); 
-            alert("Todo o histórico foi removido.");
             location.reload(); 
         }
-    } else if (senhaDigitada !== null) {
-        // Se errou a senha (e não apenas cancelou o prompt)
-        alert("Senha incorreta! Operação cancelada.");
     }
 }
 
-    async function gerarPdf(soParadas) {
-        // Correção de inicialização para garantir funcionamento mobile
+/** 4. GERAÇÃO DE PDF **/
+async function gerarPdf(soParadas) {
+    try {
         const { jsPDF } = window.jspdf || window;
-        if (!jsPDF) return alert("Erro: Biblioteca de PDF não carregada. Verifique sua internet.");
-
         const doc = new jsPDF();
         const loja = document.getElementById("seletorLoja").value;
         const data = document.getElementById("dataRel").value;
-        
-        if (!data) return alert("Selecione uma data para o relatório.");
-        
         const hist = JSON.parse(localStorage.getItem("historicoChecklist")) || [];
-        let registros = hist.filter(r => r.loja === loja && r.data === data);
         
+        let registros = hist.filter(r => r.loja === loja && r.data === data);
         if (soParadas) registros = registros.filter(r => r.itens[0].resposta === "Não");
-        if (registros.length === 0) return alert("Nenhum registro encontrado para esta data/unidade.");
+        
+        if (registros.length === 0) return alert("Nada encontrado.");
 
-        try {
-            let y = 15;
-            doc.setFontSize(16);
-            doc.text(`${soParadas ? 'MÁQUINAS PARADAS' : 'RELATÓRIO GERAL'}`, 10, y);
-            y += 10;
-            doc.setFontSize(12);
-            doc.text(`Unidade: ${loja} | Data: ${data}`, 10, y);
-            y += 15;
+        let y = 15;
+        doc.setFontSize(16);
+        doc.text(`PLAYTOY - ${loja} (${data})`, 10, y);
+        y += 12;
 
-            for (let r of registros) {
-                if (y > 250) { doc.addPage(); y = 20; }
-                
-                doc.setFont(undefined, 'bold');
-                doc.text(`MÁQUINA: ${r.equipamento}`, 10, y);
-                y += 7;
-                
-                if (!soParadas) {
-                    doc.setFont(undefined, 'normal');
-                    r.itens.forEach(item => { 
-                        if (y > 270) { doc.addPage(); y = 20; }
-                        doc.text(`- ${item.pergunta}: ${item.resposta}`, 15, y); 
-                        y += 6; 
-                    });
 
-                    if(r.comentarioFoto) { 
-                        doc.text(`Obs: ${r.comentarioFoto}`, 15, y); 
-                        y += 7; 
+for (let r of registros) {
+            if (y > 260) { doc.addPage(); y = 20; }
+            
+            // Título da Máquina (Azul escuro)
+            doc.setFontSize(11);
+            doc.setTextColor(26, 115, 232); // Cor azul #1a73e8
+            doc.setFont(undefined, 'bold');
+            doc.text(`MÁQUINA: ${r.equipamento}`, 10, y);
+            
+            // Nome do Técnico (Preto e Negrito)
+            doc.setTextColor(0, 0, 0); // Volta para o preto
+            const larguraMaq = doc.getTextWidth(`MÁQUINA: ${r.equipamento} `);
+            doc.setFontSize(9);
+            doc.text(`| Técnico: ${r.responsavel}`, 10 + larguraMaq, y);
+            
+            y += 7;
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(60, 60, 60); // Cinza para os itens
+
+            if (!soParadas) {
+                r.itens.forEach(item => { 
+                    if (y > 275) { doc.addPage(); y = 20; }
+                    // Destaca respostas "Não" em vermelho no PDF
+                    if(item.resposta === "Não") {
+                        doc.setTextColor(220, 53, 69);
+                    } else {
+                        doc.setTextColor(60, 60, 60);
                     }
+                    doc.text(`• ${item.pergunta}: ${item.resposta}`, 15, y); 
+                    y += 6; 
+                });
+                
+                doc.setTextColor(0, 0, 0); // Reseta para preto
 
-                    if (r.fotos && r.fotos.length > 0) {
-                        let xF = 15;
-                        for (let f of r.fotos) {
-                            if (y > 230) { doc.addPage(); y = 20; }
-                            try {
-                                doc.addImage(f, 'JPEG', xF, y, 40, 40);
-                                xF += 45; 
-                                if (xF > 160) { xF = 15; y += 45; }
-                            } catch (err) {
-                                console.error("Erro ao adicionar imagem ao PDF", err);
-                            }
-                        }
-                        y += (xF === 15) ? 5 : 50;
+                if (r.fotos && r.fotos.length > 0) {
+                    let xF = 15;
+                    y += 2;
+                    for (let f of r.fotos) {
+                        if (y > 230) { doc.addPage(); y = 20; }
+                        try {
+                            doc.addImage(f, 'JPEG', xF, y, 40, 40);
+                            xF += 45; 
+                            if (xF > 160) { xF = 15; y += 45; }
+                        } catch (e) { console.error(e); }
                     }
-                    y += 10;
-                } else {
-                    y += 5;
+                    y = (xF === 15) ? y : y + 50;
                 }
+
+                if(r.comentarioFoto) { 
+                    if (y > 265) { doc.addPage(); y = 20; }
+                    doc.setFont(undefined, 'bold');
+                    doc.text("OBSERVAÇÕES TÉCNICAS:", 15, y);
+                    y += 6;
+                    doc.setFont(undefined, 'normal');
+                    
+                    const linhas = doc.splitTextToSize(r.comentarioFoto, 180);
+                    linhas.forEach(l => {
+                        if (y > 280) { doc.addPage(); y = 20; }
+                        doc.text(l, 15, y);
+                        y += 6;
+                    });
+                }
+                y += 8; 
+                doc.setDrawColor(200, 200, 200);
+                doc.line(10, y - 4, 200, y - 4); // Linha divisória entre máquinas
+            } else { 
+                y += 5; 
             }
-            doc.save(soParadas ? `Paradas_${loja}_${data}.pdf` : `Geral_${loja}_${data}.pdf`);
-        } catch (error) {
-            console.error(error);
-            alert("Erro ao gerar o PDF. Pode haver muitas fotos ou dados corrompidos. Tente limpar o histórico.");
         }
+        
+        const nomeFinal = (soParadas ? "Paradas_" : "Geral_") + loja.replace(/\s+/g, '_') + "_" + data + ".pdf";
+        doc.save(nomeFinal);
+
+    } catch (err) { 
+        console.error(err);
+        alert("Erro no PDF."); 
     }
+}
 </script>
 </body>
 </html>

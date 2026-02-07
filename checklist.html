@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="icon" href="logo.png">
 
     <title>Checklist Otimizado - Playtoy Park</title>
@@ -59,7 +59,7 @@
 
 <script>
     const params = new URLSearchParams(window.location.search);
-    const maquina = (params.get("maq") || "").toUpperCase();
+    const maquina = params.get("maq") || "";
     const loja = params.get("loja") || "";
  // Cria a data no fuso horário de Brasília (ou local do dispositivo) formatada como AAAA-MM-DD
     const dataHoje = new Date().toLocaleDateString('sv-SE');   
@@ -67,26 +67,100 @@
     document.getElementById("txtMaq").innerText = maquina;
     document.getElementById("txtLoja").innerText = loja;
 
+/* ================= MÁQUINAS E SEUS CHECKLISTS ================= */
+
     const checklists = {
-        "JURASSIC PARK": ["Pistolas OK?", "Sensor Tiro OK?", "Banco OK?"],
-        "AIR HOCKEY PRO": ["Ar soprando?", "Placar OK?", "Som OK?"],
-        "STREET FIGHTER CLASSIC": ["Alavanca OK?", "Botões OK?", "Imagem OK?"],
-        "SIMULADOR MOTO": ["Guidão OK?", "Freio OK?", "Sensores OK?"],
-        "TRANSFORMERS": ["Mira OK?", "Som OK?", "Luzes OK?"],
-        "DINO HOCKEY": ["Batedores OK?", "Fluxo de ar OK?", "Gols OK?"],
-        "MORTAL KOMBAT": ["Joystick OK?", "Botão Bloqueio?", "Som OK?"],
-        "BASQUETE STREET": ["Aro firme?", "Rede OK?", "Sensor Ponto OK?"]
+	
+               /* ================= GRUPO GRUAS ================= */
+      
+        "Grua Dupla Neo Carnival": ["Existe algum display na máquina falhando?", "A alavanca está funcionando direito?", "Os botões de descer a garra e de movimentar os bichos acendem e estão funcionando?"],
+        "Grua Simples Neo Carnival A": ["Existe algum display na máquina falhando?", "A alavanca está funcionando direito?", "Os botões de descer a garra e de movimentar os bichos acendem e estão funcionando?"],
+        "Grua Simples Neo Carnival B": ["Existe algum display na máquina falhando?", "A alavanca está funcionando direito?", "Os botões de descer a garra e de movimentar os bichos acendem e estão funcionando?"],
+        "Grua Max Claw": ["Existe algum display na máquina falhando?", "A alavanca está funcionando direito?", "O botão de descer a garra esta funcionando direito?"],
+        "Super Bicho Feliz": ["Existe algum display na máquina falhando?", "A alavanca está funcionando direito?", "O botão de descer a garra esta funcionando direito?"],
+        "Grua Top Machine": ["Existe algum display na máquina falhando?", "O botão do jogo está funcionando direito?"],
+
+               /* ================= GRUPO FLIPERAMA ================= */
+
+        "Multijogos Pandora": ["A imágem da máquina está boa?", "As alavancas estão funcionando direito?", "Todos os botões estão funcionando?", "Existe algum botão falhando?"],
+
+               /* ================= GRUPO KID RIDER ================= */
+
+        "Kid Rider Vs Drago": ["A imágem da máquina está boa?", "A corrente está funcionando direito para esquerda e direita e ao puxar durante o jogo?", "A máquina esta balançando durante o jogo", "Existe algum ruído ao iniciar o balanço do equipamento?"],
+        "Kid Rider Nemo": ["A imágem da máquina está boa?", "O joystick está funcionando direito?", "O botão está funcionando?", "A máquina está balançando durante o jogo", "Existe algum ruído ao iniciar o balanço do equipamento?"],
+        "Kid Rider Trem Azul": ["A imágem da máquina está boa?", "O volante está funcionando?", "O pedal está funcionando", "A máquina está balançando durante o jogo", "Existe algum ruído ao iniciar o balanço do equipamento?"],
+        "Kid Rider Avião Apache": ["A imágem da máquina está boa?", "O equipamento inclina para os lados de acordo com o volante?", "Existe algum ruído ao iniciar o balanço do equipamento?"],
+
+               /* ================= GRUPO AIR-GAME ================= */
+
+        "Air Hockey Pac-man A": ["Existe algum display na máquina falhando?", "Existe algum erro no display?", "As portas estão prendendo o disco?", "O disco que se encontra na máquina está bom e deslizando?", "O fluxo do ar sobre a mesa está normal?"],
+        "Air Hockey Pac-man B": ["Existe algum display na máquina falhando?", "Existe algum erro no display?", "As portas estão prendendo o disco?", "O disco que se encontra na máquina está bom e deslizando?", "O fluxo do ar sobre a mesa está normal?"],
+        "Air Hockey Pac-man C": ["Existe algum display na máquina falhando?", "Existe algum erro no display?", "As portas estão prendendo o disco?", "O disco que se encontra na máquina está bom e deslizando?", "O fluxo do ar sobre a mesa está normal?"],
+
+               /* ================= GRUPO CABINADA ================= */
+
+        "Jurassic Park": ["A imágem da máquina está boa?", "Os botões de start acendem quando tem crédito e estão funcionando?", "Os botões das armas estão funcionando?", "As armas estão vibrando ao atirar?", "As armas da máquina estão calibradas?"],
+        "Transformers": ["A imágem da máquina está boa?", "Os botões de start acendem quando tem crédito e estão funcionando?", "Os botões das armas estão funcionando?", "As armas estão vibrando ao atirar?", "As armas da máquina estão calibradas?"],
+
+               /* ================= GRUPO SIMULADORES ================= */
+
+        "Super Bikes 2 A": ["A imágem da máquina está boa?", "Existe algum display na máquina falhando?", "O link da máquina está ok?", "Os botões do painel estão funcionando?", "O banco da moto se encontra inclinada para algum lado?", "As molas estão boas?", "A jogabilidade ao inclinar a moto esta boa no jogo?"],
+        "Super Bikes 2 B": ["A imágem da máquina está boa?", "Existe algum display na máquina falhando?", "O link da máquina esta ok?", "Os botões do painel estão funcionando?", "O banco da moto se encontra inclinada para algum lado?", "As molas estão boas?", "A jogabilidade ao inclinar a moto esta boa no jogo?"],
+        "Super Speed A": ["A imágem da máquina está boa?", "O link da máquina está ok?", "Os botões do painel estão funcionando?", "O volante está respondendo bem no jogo?", "O pedal de freio funciona?", "O pedal de acelerador funciona?", "O acrílico vermelho do assoalho está limpo e aceso", "A marcha está funcionando?", "A regulagem do banco está funcionando?", "Simulação está funcionando?"],
+        "Super Speed B": ["A imágem da máquina está boa?", "O link da máquina está ok?", "Os botões do painel estão funcionando?", "O volante está respondendo bem no jogo?", "O pedal de freio funciona?", "O pedal de acelerador funciona?", "O acrílico vermelho do assoalho está limpo e aceso", "A marcha está funcionando?", "A regulagem do banco está funcionando?", "Simulação está funcionando?"],
+        "Dead Head A": ["A imágem da máquina está boa?", "O link da máquina está ok?", "Os botões do painel estão funcionando?", "O volante está respondendo bem no jogo?", "O pedal de freio funciona?", "O pedal de acelerador funciona?", "A regulagem do banco está funcionando?", "Simulação está funcionando?"],
+        "Dead Head B": ["A imágem da máquina está boa?", "O link da máquina está ok?", "Os botões do painel estão funcionando?", "O volante está respondendo bem no jogo?", "O pedal de freio funciona?", "O pedal de acelerador funciona?", "A regulagem do banco está funcionando?", "Simulação está funcionando?"],
+        "Rilix": ["A imágem da máquina está boa?", "Os óculos estão conectados?", "O efeito de vento está funcionando?"],
+
+               /* ================= GRUPO REDEMPTIONS ================= */
+
+        "Castle Attack": ["A imágem da máquina está boa?", "A parte onde fica os tickets e Dispenser está sujo?", "A trava das bolas está funcionando?", "Os alvos estão marcando?", "As bolas estão muchas?"],
+        "Happy Soccer": ["Existe algum display na máquina falhando?", "A parte onde fica os tickets e dispenser está sujo?", "Os lançadores das bolas estão com força suficiente para fazer o gol?", "As 4 bolas do jogo estão em bom estado?"],
+        "Crazy Frog": ["Existe algum display na máquina falhando?", "A parte onde fica os tickets e dispenser está sujo?", "Os sapinhos estão soltos ou frouxos?", "Os sapinhos estão todos subindos durante o jogo?"],
+        "Fun In The Inks": ["A imágem da máquina está boa?", "A parte onde fica os tickets e dispenser está sujo?", "A água e o filtro estão limpos?", "As armas da máquina estão calibradas?", "As armas estão vibrando ao atirar?", "Os botões das armas estão funcionando?", "As armas estão com a saída d'água com fluxo normal?", "A grama de plástico da máquina esta em bom estado?"],
+        "Dinosaur World": ["A imágem da máquina está boa?", "A parte onde fica os tickets e dispenser está sujo?", "A água e o filtro estão limpos?", "As armas da máquina estão calibradas?", "As armas estão vibrando ao atirar?", "Os botões das armas estão funcionando?", "As armas estão com a saída d'água com fluxo normal?", "A grama de plástico da máquina está em bom estado?"],
+        "Dinosaurs Park": ["A imágem da máquina está boa?", "A parte onde fica os tickets e dispenser está sujo?", "As armas da máquina estão calibradas?", "As armas estão vibrando ao atirar?", "Os botões das armas estão funcionando?", "O fluxo de saída de bolinhas nas armas está boa?"],
+        "Duo Drive": ["A imágem da máquina está boa?", "A máquina está com som?", "A parte onde fica os tickets e dispenser está sujo?", "O volante está funcionando direito?"],
+        "Street Basketball A": ["Existe algum display na máquina falhando?", "A parte onde fica os tickets e dispenser está sujo?", "A trava das bolas está funcionando?", "A cesta está se movimentando no estágio 2? (Precisa fazer 40 pontos no primeiro estágio)", "As bolas estão muchas?"],
+        "Street Basketball B": ["Existe algum display na máquina falhando?", "A parte onde fica os tickets e dispenser está sujo?", "A trava das bolas está funcionando?", "A cesta está se movimentando no estágio 2? (Precisa fazer 40 pontos no primeiro estágio)", "As bolas estão muchas?"],
+        "Bowling Champ": ["A imágem da máquina está boa?", "A parte onde fica os tickets e dispenser está sujo?", "A jogabilidade está boa?"],
+        "Sonic Dash": ["A imágem da máquina está boa?", "A parte onde fica os tickets e dispenser está sujo?", "Todos os botões estão funcionando?"],
+        "Sonho de Mel": ["Existe algum display na máquina falhando?", "A parte onde fica os tickets e dispenser está sujo?", "Ao iniciar a partida, já aparece ponto sem ter acertado alguma abelha?", "As abelhas estão marcando ao serem acertadas?", "A trava das bolas está funcionando?", "O acrílico vermelho do display saiu do lugar?"],
+        "Duck Splash": ["Existe algum display na máquina falhando?", "A parte onde fica os tickets e dispenser está sujo?", "A água e o filtro estão limpos?", "Tem 4 patinhos em cada lado?", "O fluxo de água nas pistolas está bom?", "Ao jogar de um lado, sai água na outra pistola?", "Pistola e grade estão frouxas?"],
+        "Astro Invasion": ["Existe algum display na máquina falhando?", "A parte onde fica os tickets e dispenser está sujo?", "Os bonecos estão marcando pontos ao serem acertados?", "Os bonecos maiores estão subindo e descendo e balançando de uma lado para o outro?", "A trava das bolas está funcionando?", "O alvo de cima esta com o foguete na ponta e girando?", "O alvos de cima estão marcando pontos"],
+        "Super Wings": ["A imágem da máquina está boa?", "A parte onde fica os tickets e dispenser está sujo?", "Os manches estão funcionado pra direita e para a esquerda e quando ele é puchado?"],
+        "MIB": ["A imágem da máquina está boa?", "A parte onde fica os tickets e dispenser está sujo?", "As armas da máquina estão calibradas?", "As armas estão vibrando ao atirar?", "Os botões das armas estão funcionando?"],
+        "Ace Man": ["A imágem da máquina está boa?", "A parte onde fica os tickets e dispenser está sujo?", "A água e o filtro estão limpos?", "As armas da máquina estão calibradas?", "As armas estão vibrando ao atirar?", "Os botões das armas estão funcionando?", "As armas estão com a saída d'água com fluxo normal?", "A grama de plástico da máquina está em bom estado?", "O efeito de fumaça d'água está funcionando?"],
+        "Galaxy Travel": ["Existe algum display na máquina falhando?", "A parte onde fica os tickets e dispenser está sujo?", "As armas da máquina estão calibradas?", "As armas estão vibrando ao atirar?", "O lazer etá funcinando?", "Os botões das armas estão funcionando?", "Todos os bonecos estão funcionando?", "Bonecos estão caindo ao serem acertados?", "A sensibilidade da arma ao acertar os bonecos está boa?"],
+        "Zumbi Land Battle": ["A imágem da máquina está boa?", "A parte onde fica os tickets e dispenser está sujo?", "As armas da máquina estão calibradas?", "As armas estão vibrando ao atirar?", "Os botões das armas estão funcionando?"],
+        "Girafeplay": ["Existe algum display na máquina falhando?", "A parte onde fica os tickets e dispenser está sujo?", "Todos os dentes estão em pé?", "Existe algum dente quebrado?", "Os dentes estão marcando ponto ao serem acertados?", "Existe algum erro no display?"],
+        "Drago": ["Existe algum display na máquina falhando?", "A parte onde fica os tickets e dispenser está sujo?", "A trava das bolas está funcionando?", "As asas do drago estão funcionando?"],
+        "Rainbow": ["O display da máquina está funcionando com alguma falha ou não funciona?", "A parte onde fica os tickets e dispenser está sujo?", "A trava das bolas está funcionando?", "Ao ligar a máquina e ao levantar a porta, a máquina arma o compressor sem ter bolinhas para subir?", "As bolas estão com dificuldade de subir?", "A máquina está com algum erro no display, sem ser o erro 6 ou o erro 7?"],
+        "Cyclone": ["Existe algum display na máquina falhando?", "A parte onde fica os tickets e dispenser está sujo?", "Os botões estão funcionando?", "Existe alguma lâmpada queimada do jogo?", "Os neons estão acendendo direito?"],
+        "Pac Man Hammer": ["Existe algum display na máquina falhando?", "A parte onde fica os tickets e dispenser está sujo?", "Os bonecos estão subindo direito?", "Os bonecos estão marcando ponto ao serem acertados?", "O martelo está em bom estado e bem preso pela corda?", "Existe algum erro no display da máquina?"],
+        "Fright Night": ["Existe algum display na máquina falhando?", "A parte onde fica os tickets e dispenser está sujo?", "Os bonecos estão subindo direito?", "Os bonecos estão marcando ponto ao serem acertados?", "O martelo está em bom estado e bem preso pela corda?", "Existe algum erro no display da máquina?"],
+        "Super Soldier": ["Existe algum display na máquina falhando?", "A parte onde fica os tickets e dispenser está sujo?", "Os bonecos estão marcando ponto ao serem acertados?", "O fluxo de bolinhas esta saindo bem na pistola durante o jogo?"],
+        "Pirate Hook": ["A imágem da máquina está boa?", "O display da máquina no.cabeçote está ok?", "A parte onde fica os tickets e dispenser está sujo?", "O botão das manivelas está funcionado?", "As manivelas estão funcionando?", "As manivelas estão fazendo algum ruido alto ao girar?"]
+
     };
 
-    const perguntasExtras = checklists[maquina] || ["Limpeza feita?", "Som/Luzes OK?"];
+// 1. Definimos as perguntas padrão que aparecem em TODOS os equipamentos
+    const perguntasPadrao = ["Algo frouxo na máquina ou com algum parafuso faltando?", "O cabeçote está aceso?", "Existe alguma iluminação na máquina (incluindo led), apagada ou falhando?", "A leitora está lendo o cartão normalmente?", "O display da leitora está bom?", "A máquina está com som?", "A máquina está limpa?", "Tem algum adesivo danificado na máquina?", "A estética da máquina, em geral, está boa?", "Existe informativos de como jogar ou de pontuação na máquina?"];
+
+    // 2. Pegamos as perguntas específicas da máquina (se existirem)
+    const perguntasEspecificas = checklists[maquina] || [];
+
+    // 3. Juntamos as duas: as padrão vêm PRIMEIRO
+    const perguntasExtras = [...perguntasPadrao, ...perguntasEspecificas];
+
     const container = document.getElementById("listaPerguntas");
 
-perguntasExtras.forEach((p, i) => {
-    container.innerHTML += `<div class="card"><strong>${i+2}. ${p}</strong><br><br>
-        <input type="radio" name="p${i+1}" value="Sim"> Sim &nbsp;&nbsp;
-        <input type="radio" name="p${i+1}" value="Não"> Não</div>`;
-});
-
+    // 4. O loop agora percorre a lista combinada
+    perguntasExtras.forEach((p, i) => {
+        container.innerHTML += `<div class="card"><strong>${i+2}. ${p}</strong><br><br>
+            <input type="radio" name="p${i+1}" value="Sim"> Sim &nbsp;&nbsp;
+            <input type="radio" name="p${i+1}" value="Não"> Não</div>`;
+    });
 
     let fotosBase64 = [];
 
@@ -244,7 +318,7 @@ function salvar() {
     try {
         localStorage.setItem("historicoChecklist", JSON.stringify(hist));
         alert("Checklist atualizado com sucesso!");
-        window.location.href = "index.html";
+        window.location.replace("index.html");
     } catch (e) {
         alert("Erro: O limite de memória foi atingido. Remova fotos ou limpe o histórico.");
     }
