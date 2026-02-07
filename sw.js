@@ -1,13 +1,19 @@
+const CACHE_NAME = 'playtoy-v1';
+const ASSETS = [
+  './',
+  './index.html',
+  './checklist.html',
+  './icon-192.png',
+  './icon-512.png',
+  './logo_abertura.png',
+  './manifest.json'
+];
+
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open('playtoy-v1').then((cache) => {
-      return cache.addAll([
-        'index.html', 
-        'checklist.html', 
-        'icon-192.png', 
-        'icon-512.png', 
-        'logo_abertura.png'
-      ]);
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('Arquivos em cache');
+      return cache.addAll(ASSETS);
     })
   );
 });
@@ -19,3 +25,4 @@ self.addEventListener('fetch', (e) => {
     })
   );
 });
+
