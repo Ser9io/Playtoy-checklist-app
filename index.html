@@ -338,13 +338,12 @@ for (let r of registros) {
             doc.setTextColor(60, 60, 60); // Cinza para os itens
 
             if (!soParadas) {
-                r.itens.forEach(item => { 
+                r.itens.forEach((item, index) => { 
                     if (y > 275) { doc.addPage(); y = 20; }
-                    // Destaca respostas "Não" em vermelho no PDF
-                    if(item.resposta === "Não") {
-                        doc.setTextColor(220, 53, 69);
+                    if(index === 0 && item.resposta === "Não") {
+                        doc.setTextColor(220, 53, 69); // Vermelho
                     } else {
-                        doc.setTextColor(60, 60, 60);
+                        doc.setTextColor(60, 60, 60);  // Cinza padrão
                     }
                     doc.text(`• ${item.pergunta}: ${item.resposta}`, 15, y); 
                     y += 6; 
